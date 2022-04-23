@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class LaunchPanel extends JPanel {
 
     ArrayList<MovingDot> dots;
-    Obstacle o;
+    ArrayList<Obstacle> obstacles;
     Dot launchPoint;
     Point s;
 
@@ -15,7 +15,8 @@ public class LaunchPanel extends JPanel {
     public LaunchPanel() {
         setPreferredSize(new Dimension(500,500));
         dots = new ArrayList<MovingDot>();
-        o = new Obstacle(new Point(150,150));
+        obstacles = new ArrayList<Obstacle>();
+        generateObstacles(3);
         s = new Point(250,250);
         launchPoint =new Dot(s);
         launchPoint.setColor(Color.GREEN);
@@ -24,7 +25,7 @@ public class LaunchPanel extends JPanel {
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
+    protected synchronized void paintComponent(Graphics g) {
         super.paintComponent(g);
         int h = this.getHeight();
         int w = this.getWidth();
@@ -34,15 +35,19 @@ public class LaunchPanel extends JPanel {
 
         for (MovingDot d: dots) {
 
-            if (d.getRegion().intersects(o.getRegion())) {
-                o.hitBy(d);
+            for (Obstacle o : obstacles) {
+                if (d.getRegion().intersects(o.getRegion())) {
+                    o.hitBy(d);
+                }
             }
 
             d.move();
             d.paint(g);
         }
 
-        o.paint(g);
+        for (Obstacle o : obstacles) {
+            o.paint(g);
+        }
 
         try {
             Thread.sleep(10);
@@ -53,13 +58,45 @@ public class LaunchPanel extends JPanel {
     }
 
     private void generateDot(Point p){
-        System.out.println("Generate Dot");
         MovingDot  d = new MovingDot(launchPoint.getCenter(), p, 1);
         //d = new GravityDotDecorator(d);
         d = new BoundedDotDecorator(d, new Point(getWidth(),getHeight()) );
         dots.add(d);
         Thread t = new Thread(d);
         t.start();
+    }
+
+    private void generateObstacles(int difficulty) {
+        switch (difficulty) {
+            case 1 :
+                obstacles.add(new MovingObstacle( new Point(100, 100), new Point(100, 999999),0.25, this));
+                obstacles.add(new MovingObstacle(new Point(250, 100), new Point(250, 999999), 0.25, this));
+                obstacles.add(new MovingObstacle(new Point(400, 100), new Point(400, 999999), 0.25, this));
+                break;
+
+            case 2 :
+                obstacles.add(new MovingObstacle(new Point(100, 100), new Point(100, 999999), 0.3, this));
+                obstacles.add(new MovingObstacle(new Point(250, 100), new Point(250, 999999), 0.3, this));
+                obstacles.add(new MovingObstacle(new Point(400, 100), new Point(400, 999999), 0.3, this));
+                obstacles.add(new MovingObstacle(new Point(175, 175), new Point(175, 999999), 0.3, this));
+                obstacles.add(new MovingObstacle(new Point(325, 175), new Point(325, 999999), 0.3, this));
+                break;
+
+            case 3 :
+                obstacles.add(new MovingObstacle(new Point(100, 100), new Point(100, 999999), 0.35, this));
+                obstacles.add(new MovingObstacle(new Point(250, 100), new Point(250, 999999), 0.35, this));
+                obstacles.add(new MovingObstacle(new Point(400, 100), new Point(400, 999999), 0.35, this));
+                obstacles.add(new MovingObstacle(new Point(175, 175), new Point(175, 999999), 0.35, this));
+                obstacles.add(new MovingObstacle(new Point(325, 175), new Point(325, 999999), 0.35, this));
+                obstacles.add(new MovingObstacle(new Point(100, 250), new Point(100, 999999), 0.35, this));
+                obstacles.add(new MovingObstacle(new Point(250, 250), new Point(250, 999999), 0.35, this));
+                obstacles.add(new MovingObstacle(new Point(400, 250), new Point(400, 999999), 0.35, this));
+                break;
+        }
+    }
+
+    public void removeObstacle(Obstacle o) {
+        obstacles.remove(o);
     }
 
     private class MousePlay implements MouseListener {
